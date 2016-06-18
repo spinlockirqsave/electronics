@@ -1,0 +1,27 @@
+DDS Function Signal Generator Module Sine Square Sawtooth Triangle Wave0.5-14Vpp
+
+Specification:
+• Operating voltage: DC7V-9V
+• DDS frequency range: 1HZ-65534Hz.
+• High-speed frequency (HS) output up to 8MHz;
+• DDS signal amplitude of the offset amount can be adjusted separately by two potentiometers;
+• DDS signals: sine wave, square wave, sawtooth, reverse sawtooth, triangle wave, the ECG wave and noise wave.
+• 1602 LCD menu;
+• Intuitive keyboard.
+• Section into the value: 1,10,100,1000,10000 Hz;
+• The power automatically restore the last used configuration.
+• Offset: 0.5pp-5Vpp
+• Amplitude amount: 0.5Vpp-14Vpp
+KEY FUNCTIONS:
+The UP output waveform select
+The DOWN output waveform select
+LEFT output frequency -
+RIGHT output frequency +
+STOP / RUN the output stop / start
+
+"UP" key waveforms order:
+ECG = electrocardiogram wave (in the OFF state, the "left "and "right" keys to set the output frequency. Middle button start, all of the following waveform set)
+Rev Sawtooth = reverse sawtooth
+SawTooth = sawtooth
+Triangle = triangle wave
+Square = square wave
