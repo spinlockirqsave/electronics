@@ -1,0 +1,198 @@
+<h2>Network connected large 4-digit LED display</h2>
+<br>
+For more documentation on AVR web servers see <a href="http://tuxgraphics.org/electronics/">http://tuxgraphics.org/electronics/</a>
+<br>
+<br>
+All parts needed to build this AVR ethernet solution can be ordered from 
+<a href="http://shop.tuxgraphics.org/">http://shop.tuxgraphics.org/</a>.
+<br>
+
+<h2>License</h2>
+Copyright of the software and all diagrams: Guido Socher, tuxgraphics.org
+
+<br>
+The file main.c and main-counter.c come with a BSD license (http://opensource.org/licenses/BSD-2-Clause).
+All the other files are essentially libraries and have a LGPL V2 license.
+(see http://www.gnu.org/licenses/lgpl.html)
+<br>
+<br>
+Other licenses are available on request.
+
+<pre>
+
+<b>!! READ THIS FIRST !!</b>
+---------------------
+! Edit the main.c file and change the lines:
+! static uint8_t mymac[6] = {0x54,0x55,0x58,0x10,0x00,0x29};
+! static uint8_t myip[4] = {10,0,0,29};
+
+Check the file "Makefile" and change the LOADCMD line if needed.
+
+More information about Makefiles can be found at:
+http://tuxgraphics.org/electronics/200912/makefiles.shtml
+
+For the first device you build you will not need to change the mymac line.
+But you will probably need to change the IP address (myip). myip must be a
+free address from the address range in your home network.
+
+Example: you wlan router might have 192.168.1.1, your PC might have
+192.168.1.2. This means you could e.g use 192.168.1.10 and leave some
+room for more PCs. If you use DHCP then make sure that the address it not
+double allocated (exclude it from the DHCP range).
+
+You need an avr-gcc development environment in order to compile this.
+See http://tuxgraphics.org/electronics/200901/avr-gcc-linux.shtml
+
+<b>To compile the software use the command:</b>
+make
+
+Note: windows users may use and modify the supplied winmake.bat script.
+
+The command
+make load
+
+Note: windows users may use and modify the supplied winload.bat script.
+
+will execute the avrdude command to load the main.hex software (remote relay
+switch on/off software, compiled from main.c).
+E.g something like: 
+   avrdude -p m88 -c stk500v2 -e -U flash:w:main.hex
+
+<br>Note your programmer might interfere with the enc28j60!</b> For the avrusb500
+with 30cm cable you can normally leave the cable on. For all other programmers
+it is however saver to remove the programmer cable and power down/up the device.
+This is because the SPI interface is used for loading of the software and 
+communication to the enc28j60.
+
+To see a list of all possible build targets run the command:
+make help
+
+<b>
+Selecting the right clock source
+--------------------------------
+</b>
+Tuxgraphics hardware sold as of march 2007 is prepared to use the clock
+signal from the enc28j60. To use this you need to change the 
+low fuse byte once from 0x62 to 0x60:
+
+<b>
+avrdude -p m328p -c stk500v2 -u -v -U lfuse:w:0x60:m
+</b>
+
+The above command can as well be executed by using the make
+file. In a Linux shell you can just type:
+make fuse
+
+Note: windows users may use and modify the supplied winsetfuse.bat script.
+
+
+Just change the lfuse from factory default to 0x60. 
+
+Fuses of the atmega328p after programming:
+
+The fuse settings of the atmega328p after programming
+should be as below (the efuse has some unused bits and is dependent 
+on the chip revision):
+ lfuse reads as 0x60
+ hfuse reads as 0xD9
+ efuse reads as 0x07
+
+details of the lfuse bits:
+  CKDIV8 = 0
+  CKOUT  = 1
+  SUT1   = 1
+  SUT0   = 0
+  CKSEL3 = 0
+  CKSEL2 = 0
+  CKSEL1 = 0
+  CKSEL0 = 0
+
+
+If you are unsure what the current fuse setting are on the atmega
+then you can read the fuse settings with a command like:
+          avrdude -p m328p -c stk500v2 -v -q
+
+The below list of fuses shows for reference purpose the settings
+of a new and never programmed chip. 
+
+The result should be this (default factory settings for atmega328p):
+          lfuse reads as 62
+          hfuse reads as D9
+          efuse reads as 7
+
+<b>
+Compiling on non-Unix systems
+-----------------------------
+</b>
+Please use the provided Makefile !!!
+
+It will also work under Windows.
+
+Take a look at the supplied winmake.bat and winload.bat file. The bat script
+might be needed to set the environment correctly in order to use
+the Makefile under windows.
+
+Edit the Makefile to make the needed adjustments at the top
+of the file.
+
+More information about Makefiles can be found at:
+http://tuxgraphics.org/electronics/200912/makefiles.shtml
+
+<b>
+Hardware 
+--------
+</b>
+The whole system is based on the tuxgraphics ethernet board.
+You will need the kit for the 4 digit large LED display and
+a atmega328p based ethernet board.
+
+The display has 2 push buttons in the upper right corner.
+Only one of the buttons has a function in this software.
+You can press the top right button during power on and it
+you will git to a web page where you can change the IP
+address of the board without re-compiling the software.
+
+<b>
+Updating the numbers on the display
+-----------------------------------
+</b>
+
+1) From a desktop web browser such as firefox, MSIE, safari.... 
+Just point the browser to the IP address of the board
+and write the number that you want to display into the form
+on the web page.
+large LED display with web interface
+
+2) You can use a command-line web browser such as lynx:
+# lynx -dump "http://10.0.0.29/set?n=12:34"
+This would cause the display to show "12:34"
+
+Note that a space must be encoded in the URL as
+it is not a valid URL character. It can be encoded
+as "+" or "%20". The following example sends
+the string "1  2":
+# curl "http://10.0.0.29/set?n=1++2"
+or
+# curl "http://10.0.0.29/set?n=1%20%202"
+
+3)
+You can use the udpcom command (see directory udpcom):
+
+# udpcom n=12:34 10.0.0.29
+II: data: n=12:34, ip: 10.0.0.29 port: 1200
+OK: 10.0.0.29: n=12:34
+
+This would cause the display to show "12:34". The udpcom command is available for Linux, windows and Mac.
+
+
+<b>
+Revision history
+----------------
+</b>
+2014-04-26: version 1.0 -- first version. 
+2014-05-16: version 1.1 -- added udpcom binary for mac os
+2014-07-27: version 1.2 -- udpcom updated
+2015-02-15: version 1.3 -- add a push button counter example (main-counter.c)
+
+</pre>
+vim:sw=8:ts=8:si:et
