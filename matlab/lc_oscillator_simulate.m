@@ -1,11 +1,19 @@
 % Simulate free oscillations in LC circuit.
 % "free" of any external EMF.
 %
+%           -->
+%       i_L == i_C 
+% ------ L -----|| ------
+% |     v_L     v_C     |
+% EMF                   |
+% |                     |
+% -----------------------
+%
 % Params:
 % t - vector of time stamps [ms]
 % L - inductance
 % C - capacitance
-% V0 - initial voltage in the circuit (potential difference), e.g: battery
+% V0 - initial voltage across the circuit (potential difference), e.g: battery
 % is charging the LC circuit and then removed, there is no EMF, only that
 % initial voltage
 % EMF - forced oscillations
@@ -27,7 +35,7 @@ function [] = lc_oscillator_simulate(t, L, C, V_0, phase)
     L_ = L;
     C_ = C;
     V_0_ = V_0;
-    omega_ = 1 / sqrt(L *C);     % LC oscillator frequency
+    omega_ = 1 / sqrt(L * C);     % LC oscillator frequency
     fprintf("omega: %f (natural circuit's angular frequency)\n", omega_);
     
     phase_ = phase;
@@ -51,17 +59,17 @@ function [] = lc_oscillator_simulate(t, L, C, V_0, phase)
         qC_vec(i) = Q_ * cos(omega_ * t(i) + phase_);
         %fprintf("-> q(%d): %f\n", i, q_vec(i));
         
-        % Potential difference on capacitor
+        % Potential difference across capacitor
         uC_vec(i) = qC_vec(i) / C;  % same as = V_0_ * cos(omega_ * t(i) + phase_);
         
-        % Current in the circuit, current in the inductor is same as
-        % current on capacitor: iC = iL = dq / dt
+        % Current through the circuit, current in the inductor is same as
+        % current through capacitor: iC = iL = dq / dt
         iL_vec(i) = - omega_ * Q_ * sin(omega_ * t(i) + phase_);
     end
      
-    plot_as_one(t, qC_vec, 'qC - charge on Capacitor', uC_vec, 'uC - voltage on capacitor', iL_vec, 'iL - current in the circuit');
-    plot_as_sub(t, qC_vec, 'qC - charge on Capacitor', uC_vec, 'uC - voltage on capacitor', iL_vec, 'iL - current in the circuit');
-    %plot_all(t, qC_vec, 'qC - charge on Capacitor', uC_vec, 'uC - voltage on capacitor', iL_vec, 'iL - current in the circuit');
+    plot_as_one(t, qC_vec, 'qC - charge on Capacitor', uC_vec, 'uC - voltage across capacitor', iL_vec, 'iL - current through the circuit');
+    plot_as_sub(t, qC_vec, 'qC - charge on Capacitor', uC_vec, 'uC - voltage across capacitor', iL_vec, 'iL - current through the circuit');
+    %plot_all(t, qC_vec, 'qC - charge on Capacitor', uC_vec, 'uC - voltage across capacitor', iL_vec, 'iL - current through the circuit');
 end
 
 function [] = plot_as_one(t, y1, s1, y2, s2, y3, s3)

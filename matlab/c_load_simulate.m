@@ -40,7 +40,7 @@ function [] = c_load_simulate(t, C, EMFm, omega_d)
     tmax = max(t);
     fprintf("tmax %f\n", tmax);
     
-    % The current leads voltage by PI/2 in pure capacitive load circuit.
+    % The current leads voltage by PI/2 in pure capacitive load circuit (ICE).
     phase_ = -pi / 2;
     fprintf("phase %f\n", phase_);
     
@@ -61,27 +61,33 @@ function [] = c_load_simulate(t, C, EMFm, omega_d)
     % Charge on capacitor
     q_C = C * v_C;  % same as  q_C = C * EMFm * sin(omega_d_ * t);
     
-    % Current across capacitor i = dq/dt
+    % Current through capacitor i = dq/dt = C * dv/dt
+    %
+    % !!!
+    %       i_C = C * dv_C / dt     (current leads, ICE)
+    % !!!
+    %
     % i_C = dq/dt = omega_d_ * C * EMFm * cos(omega_d_ * t);
     % which is same as
     i_C = omega_d_ * C * EMFm * sin(omega_d_ * t - phase_);
     
     % Amplitudes
     fprintf("Amplitudes:\n");
-    fprintf("   v_C: %f\n   i_C: %f\n", EMFm, EMFm * C * omega_d_);
+    fprintf("   v_C: %f\n   i_C: %f\n   q_C: %f\n", EMFm, EMFm * C * omega_d_, C * EMFm);
      
-    plot_as_one(t, v_C, 'v_C - voltage across capacitor', i_C, 'i_C - current through capacitor');
-    plot_as_sub(t, v_C, 'v_C - voltage across capacitor', i_C, 'i_C - current through capacitor');
-    plot_all(t, q_C, 'q_C - electric charge on capacitor', v_C, 'v_C - voltage across capacitor', i_C, 'i_C - current in the circuit');
+    plot_as_one(t, v_C, 'v_C - voltage across capacitor', q_C, 'electric charge across capacitor', i_C, 'i_C - current through capacitor');
+    %plot_as_sub(t, v_C, 'v_C - voltage across capacitor', i_C, 'i_C - current through capacitor');
+    %plot_all(t, q_C, 'q_C - electric charge across capacitor', v_C, 'v_C - voltage across capacitor', i_C, 'i_C - current through the circuit');
 end
 
-function [] = plot_as_one(t, y1, s1, y2, s2)
+function [] = plot_as_one(t, y1, s1, y2, s2, y3, s3)
     figure();
     yyaxis left
-    plot(t, y1, 'r');
+    plot(t, y1, 'r', t, y2, 'g');
+    
     yyaxis right
-    plot(t, y2, 'b');
-    legend(s1, s2);
+    plot(t, y3, 'b');
+    legend(s1, s2, s3);
 end
 
 function [] = plot_as_sub(t, y1, s1, y2, s2)

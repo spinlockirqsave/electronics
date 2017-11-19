@@ -10,7 +10,7 @@
 %
 % Params:
 % t - vector of time stamps [ms]
-% L - capacitance
+% L - inductance
 % EMFm - electromotive force amplitude (max oscillation)
 % omega_d - driving angular frequency (omega of the EMF,
 %           not to be confused with circuit's natural angular frequency omega)
@@ -40,7 +40,7 @@ function [] = l_load_simulate(t, L, EMFm, omega_d)
     tmax = max(t);
     fprintf("tmax %f\n", tmax);
     
-    % The current lags voltage by PI/2 in pure inductive load circuit.
+    % The current lags voltage by PI/2 in pure inductive load circuit (ELI).
     phase_ = pi / 2;
     fprintf("phase %f\n", phase_);
     
@@ -58,9 +58,14 @@ function [] = l_load_simulate(t, L, EMFm, omega_d)
     % v_L = EMF
     v_L = EMFm * sin(omega_d_ * t);
     
-    % Current across inductor
+    % Current through inductor
     % Faradays law tells us that voltage across inductor can also
     % be written as v_L = L * di_L / dt
+    %
+    % !!!
+    %       v_L = L * di_L / dt     (current lags, voltage leads, ELI)
+    % !!!
+    %
     % Thus di_L / dt = EMFm * sin(omega * t) / L
     % Integrating this we get
     % i_L = Int(di_L/dt) = -EMFm * cos(omega * t) / (L * omega)
@@ -72,7 +77,7 @@ function [] = l_load_simulate(t, L, EMFm, omega_d)
      
     plot_as_one(t, v_L, 'v_L - voltage across inductor', i_L, 'i_L - current through inductor');
     plot_as_sub(t, v_L, 'v_L - voltage across inductor', i_L, 'i_L - current through inductor');
-    plot_all(t, v_L, 'v_L - voltage across inductor', i_L, 'current across inductor');
+    plot_all(t, v_L, 'v_L - voltage across inductor', i_L, 'current through inductor');
 end
 
 function [] = plot_as_one(t, y1, s1, y2, s2)

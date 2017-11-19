@@ -74,7 +74,7 @@ function [] = r_load_simulate(t, R, EMFm, omega_d)
      
     plot_as_one(t, v_R_vec, 'v_R - voltage across resistor', i_R_vec, 'i_R - current through resistor');
     plot_as_sub(t, v_R_vec, 'v_R - voltage across resistor', i_R_vec, 'i_R - current through resistor');
-    plot_all(t, v_R_vec, 'v_R - voltage across resistor', i_R_vec, 'i_R - current in the circuit');
+    plot_all(t, v_R_vec, 'v_R - voltage across resistor', i_R_vec, 'i_R - current through the circuit');
 end
 
 function [] = plot_as_one(t, y1, s1, y2, s2)
