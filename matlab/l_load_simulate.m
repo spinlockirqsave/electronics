@@ -1,16 +1,16 @@
-% Simulate forced oscillations in pure resistive load circuit.
+% Simulate forced oscillations in pure inductive load circuit.
 %
-%       -->
-%       i_R 
-% ------/\/\-----
-% |     v_R      |
-% EMF            |
-% |              |
-% ---------------
+%        -->
+%        i_L 
+% ------- L ------
+% |      v_L      |
+% EMF             |
+% |               |
+% ----------------
 %
 % Params:
 % t - vector of time stamps [ms]
-% R - resistance
+% L - capacitance
 % EMFm - electromotive force amplitude (max oscillation)
 % omega_d - driving angular frequency (omega of the EMF,
 %           not to be confused with circuit's natural angular frequency omega)
@@ -18,8 +18,8 @@
 % Piotr Gregor <piotr@dataanadsignal.com>
 
 
-function [] = r_load_simulate(t, R, EMFm, omega_d)
-    global R_
+function [] = l_load_simulate(t, L, EMFm, omega_d)
+    global L_
     global EMFm_ 
     global omega_d_
     global phase_
@@ -31,7 +31,7 @@ function [] = r_load_simulate(t, R, EMFm, omega_d)
     n = length(t);
     fprintf("n %d\n", n);
    
-    R_ = R;
+    L_ = L;
     EMFm_ = EMFm;           % EMF amplitude
     
     omega_d_ = omega_d;     % driving frequency
@@ -40,8 +40,8 @@ function [] = r_load_simulate(t, R, EMFm, omega_d)
     tmax = max(t);
     fprintf("tmax %f\n", tmax);
     
-    % The voltage is in resonance with current in R load.
-    phase_ = 0;
+    % The current lags voltage by PI/2 in pure inductive load circuit.
+    phase_ = pi / 2;
     fprintf("phase %f\n", phase_);
     
     % Circuits frequency
@@ -52,29 +52,27 @@ function [] = r_load_simulate(t, R, EMFm, omega_d)
     T_ = 1 / f_;
     fprintf("period %f\n", T_);
     
+    % Potential difference through inductor
+    % In pure inductive load we have from the Kirchhoff's loop rule
+    % (2nd law) for voltage:
+    % v_L = EMF
+    v_L = EMFm * sin(omega_d_ * t);
+    
+    % Current across inductor
+    % Faradays law tells us that voltage across inductor can also
+    % be written as v_L = L * di_L / dt
+    % Thus di_L / dt = EMFm * sin(omega * t) / L
+    % Integrating this we get
+    % i_L = Int(di_L/dt) = -EMFm * cos(omega * t) / (L * omega)
+    i_L = - EMFm * cos(omega_d_ * t) / (L * omega_d_);
+    
     % Amplitudes
     fprintf("Amplitudes:\n");
-    fprintf("   v_R: %f\n   i_R: %f\n", EMFm, EMFm / R);
-    
-    % Init vectors
-    v_R_vec = 1 : n;
-    i_R_vec = 1 : n;
-    
-    % Simulation
-    for i = 1 : n
-        
-        % Potential difference through resistor
-        % In R load we have from the Kirchhoff's loop rule (2nd law) for voltage:
-        % EMF = v_R  where v_R is voltage through the resistor
-        v_R_vec(i) = EMFm * sin(omega_d_ * t(i));
-        
-        % Current through resistor
-        i_R_vec(i) = v_R_vec(i) / R;  % same as EMFm / R * sin(omega_d_ * t(i));
-    end
+    fprintf("   v_L: %f\n   i_L: %f\n", EMFm, EMFm / (L * omega_d_));
      
-    plot_as_one(t, v_R_vec, 'v_R - voltage across resistor', i_R_vec, 'i_R - current through resistor');
-    plot_as_sub(t, v_R_vec, 'v_R - voltage across resistor', i_R_vec, 'i_R - current through resistor');
-    plot_all(t, v_R_vec, 'v_R - voltage across resistor', i_R_vec, 'i_R - current in the circuit');
+    plot_as_one(t, v_L, 'v_L - voltage across inductor', i_L, 'i_L - current through inductor');
+    plot_as_sub(t, v_L, 'v_L - voltage across inductor', i_L, 'i_L - current through inductor');
+    plot_all(t, v_L, 'v_L - voltage across inductor', i_L, 'current across inductor');
 end
 
 function [] = plot_as_one(t, y1, s1, y2, s2)
