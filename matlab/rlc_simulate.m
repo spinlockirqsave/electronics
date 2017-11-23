@@ -108,8 +108,8 @@ function [] = rlc_simulate(t0, dt, n, R, L, C, EMFm, f)
             iL_(i) = iL_(i - 1) + diL(i - 1);
         end
 
-        %fprintf("%d -> duC/dt %f, duC %f, diL/dt %f, diL %f\n", i, duC(i)/dt, duC(i), diL(i)/dt, diL(i));
-        %fprintf("%d -> EMF %f, uC %f, iL %f\n", i, EMF_(i), uC_(i), iL_(i));
+        fprintf("%d -> duC/dt %f, duC %f, diL/dt %f, diL %f\n", i, duC(i)/dt, duC(i), diL(i)/dt, diL(i));
+        fprintf("%d -> EMF %f, uC %f, iL %f\n", i, EMF_(i), uC_(i), iL_(i));
     end
     
     % plot

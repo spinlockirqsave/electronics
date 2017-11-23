@@ -1,5 +1,5 @@
 % Find the capacitance value resulting in the circuit natural frequency
-% being equal to driving (forced) frequency
+% being equal to driving (forced) frequency.
 %
 % Params:
 % C_min - capacitance left bounday
@@ -12,18 +12,24 @@
 
 function [ret] = rlc_resonant(f_d, C_min, C_max)
 global L_
-global C_
 
-global N_  % number of x elements in vector passed to Newton-Raphson method
+global N_  % max number of iterations performed in Newton-Raphson method
 
 L_ = 0.02;
-C_ = 0.000002;
 N_ = 1000;
+epsilon = 0.000001;   % accuracy of root searching in Newton-Raphson
 
+if ((C_min == 0) || (C_max == 0))
+    fprintf("Err, capacitance cannot be 0 in 'proper' RLC circuit.");
+    fprintf(" Please change the range\n");
+    ret = NaN;
+    return;
+end
 
 if (C_min >= C_max)
     fprintf("Err, capacitance is not a range: C_min == C_max == %f\n", C_min);
-    ret = 0.0;
+    ret = NaN;
+    return;
 end
 
 % Init
@@ -32,52 +38,80 @@ x = C_min : dx : C_max;
 
 % Circuit's is in resonance if forced frequency f_d equals natural circuit's
 % frequency f = 1/(2*pi*sqrt(LC))
-y = 1 ./ (2 * pi * sqrt(L_ * x)) - f_d;
+y = @(x) 1.0 ./ (2.0 .* pi * sqrt(L_ .* x)) - f_d;
 x_min = C_min;
 x_max = C_max;
-y_prim = -1 ./ (4 * pi * sqrt(x .* x .* x));
-y_prim_prim = 3 ./ (8 .* pi .* x .* x .* sqrt(x));
+y_prim = @(x) -1.0 ./ (4.0 * pi * sqrt(L_ .* x .* x .* x));
+y_prim_prim = @(x) 3.0 ./ (8.0 .* pi .* x .* x .* sqrt(L_ .* x));
 
-ret = newton_raphson(x, y, x_min , x_max, y_prim, y_prim_prim);
+ret = newton_raphson(x, y, x_min , x_max, y_prim, y_prim_prim, N_, epsilon);
 
 end
 
-function [ret] = newton_raphson(x, y, x_min , x_max, y_prim, y_prim_prim)
+function [ret] = newton_raphson(x, y, x_min , x_max, y_prim, y_prim_prim, N, epsilon)
 global N_
 
-x_n = length(x);
-y_n = length(y);
-y_prim_n = length(y_prim);
-y_prim_prim_n = length(y_prim_prim);
-
-if (x_n == 0 || y_n == 0 || y_prim_n == 0 || y_prim_prim_n == 0)
-    fprintf("Err, vector size is 0\n");
-    ret = 0.0;
+if (y(x_min) == 0)
+    ret = x_min;
+    return;
 end
 
-if (x_min >= x_max || x_n < 1)
+if (y(x_max) == 0)
+    ret = x_max;
+    return;
+end
+
+if (x_min > x_max)
     fprintf("Err, x argument is not a range: x_min == x_max == %f\n", x_min);
-    ret = 0.0;
-end
-
-if (~(x_n == y_n)  || (x_n ~= y_prim_n) || (x_n ~= y_prim_prim_n))
-    fprintf("Err, bad vector sizes\n");
-    ret = 0.0;
-end
-
-if (y(1) == 0)
-    ret = x(1);
-end
-
-if (y(y_n) == 0)
-    ret = x(x_n);
+    ret = NaN;
+    return;
 end
 
 % Check mandatory conditions
-if (y(1) * y(y_n) > 0)
+if (y(x_min) * y(x_max) > 0)
     fprintf("Err, bad init condition: y boundaries are same in sign\n");
-    ret = 0.0;
+    fprintf("Please consider increasing range or shifting it.\n");
+    ret = NaN;
+    return;
 end
 
-ret = 13.0;
+% Choose starting point
+x = x_min;
+if (y(x_max) * y_prim_prim(x_max) > 0)
+    x = x_max;
+end
+
+% Iterative computation
+i = 1;
+x_vec = 1 : 1 : 1000;
+y_vec = 1 : 1 : 1000;
+x_vec(1) = x;
+y_vec(1) = y(x);
+while ((i < N) && (abs(y(x)) > epsilon))
+    x_vec(i + 1) = x;
+    y_vec(i + 1) = y(x);
+    x = x - y(x) / y_prim(x);
+    i = i + 1;
+end
+
+if ((i > 1) && (i < N))
+    x_vec(i + 1) = x;
+    y_vec(i + 1) = y(x);
+    i = i + 1;
+end
+
+if (i < N)
+    x_vec = x_vec(1 : i);
+    y_vec = y_vec(1 : i);
+end
+
+sz = linspace(100, 1, i);
+color = linspace(1, 10, i);
+scatter(x_vec, y_vec, sz, color, 'filled');
+xlabel("Capacitnace [F]");
+ylabel("Frequency [Hz]");
+legend({['f - f_d : diff between' char(10) 'circuits frequency' char(10) 'at the given capacitance' char(10) 'and the driving EMF''s freq']});
+
+ret = x;
+
 end

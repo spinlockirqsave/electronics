@@ -73,7 +73,12 @@ function [] = rlc_simulate(t0, dt, n, R, L, C, EMFm, f)
     
     % Initial inputs of EMF, voltage across capacitor and current through inductor
     EMFm_ = EMFm;
-    EMF_ = EMFm_ * sin(omega_d_ * t);
+    if (f_d_ == 0.0)
+        EMF_ = EMFm_ * ones(1,n + 1);
+    else
+        EMF_ = EMFm_ * sin(omega_d_ * t);
+    end
+    
     uC_(1) = 0;     % initial voltage across capacitor must be zero
     iL_(1) = 0;     % initial current through the circuit is zero
     uCe_(1) = 0;
@@ -196,10 +201,13 @@ end
 
 function [] = plot_as_one(t, y1, s1, y2, s2, y3, s3, y4, s4, y5, s5)
     figure();
+    xlabel('Time [s]');
     yyaxis left
     plot(t, y1, 'r', t, y2, 'g', t, y3, 'blue');
+    ylabel('Current [A]');
     yyaxis right
     plot(t, y4, 'black', t, y5, 'blue');
+    ylabel('Potential difference [V]');
     legend(s1, s2, s3, s4, s5);
 end
 
