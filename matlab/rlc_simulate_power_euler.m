@@ -1,4 +1,8 @@
-% Simulate RLC circuit using improved Euler method.
+% Simulate power produced by RLC circuit.
+%
+% Details
+% Using improved Euler method for U and I. Using Simpson method for
+% integration of instantaneous power.
 %
 % Params:
 % t0 - start time [ms]
@@ -9,14 +13,14 @@
 % C - capacitance
 % EMFm - max value of electromotive force EMF (amplitude)
 % f - frequency of the EMF (driving frequency in Hz)
-%
-% Details
-% Function is using improved Euler method for function approximation.
+% 
+% Return
+% Power produced by the circuit in time [t0, t0 + n*dt].
 %
 % Piotr Gregor <piotr@dataanadsignal.com>
 
 
-function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
+function [power] = rlc_simulate_power_euler(t0, dt, n, R, L, C, EMFm, f)
     clearvars -global
     global t0_
     global dt_
@@ -44,6 +48,7 @@ function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
     global XC_res_
     global XL_res_
     
+    power = NaN;
     
     % Vectors
     t = t0 : dt : t0 + n * dt;
@@ -64,6 +69,12 @@ function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
     L_ = L;
     C_ = C;
     
+    if (mod(n_, 2))
+        fprintf("Err, number of steps must be even\n");
+        return;
+    end
+    p_ = t(1 : n_ / 2);
+    p_time_ = 2 * t(1 : n_ / 2);
     
     % Driving angular frequency
     f_d_ = f;
@@ -80,7 +91,7 @@ function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
     % Initial inputs of EMF, voltage across capacitor and current through inductor
     EMFm_ = EMFm;
     if (f_d_ == 0.0)
-        EMF_ = EMFm_ * ones(1,n + 1);
+        EMF_ = EMFm_ * ones(1, n + 1);
     else
         EMF_ = EMFm_ * sin(omega_d_ * t);
     end
@@ -114,7 +125,7 @@ function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
     % Error checking
     if (n < 2)
         fprintf("\nErr, cannot run simulation. Number of steps too small...\n");
-        return
+        return;
     end
     
     fprintf("Simulating %d steps...\n", n);
@@ -124,27 +135,42 @@ function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
     for i = 1 : n + 1
         if (i > 1)
             % uC
-            duC(i) = duC_dt(i) * dt;
+            duC(i) = duC_dt(i) .* dt;
             uC_(i) = uC_(i - 1) + duC(i - 1);
         
             % iL
-            diL_(i) = diL_dt(i) * dt;
+            diL_(i) = diL_dt(i) .* dt;
             iL_(i) = iL_(i - 1) + diL_(i - 1);
             
             % uCe_
-            uCe_(i) = uCe_(i - 1) + h_ * duC_dt_e(i - 1);
+            uCe_(i) = uCe_(i - 1) + h_ .* duC_dt_e(i - 1);
             %uCe_(i) = uC_(i);
             
             % iLe_
-            iLe_(i) = iLe_(i - 1) + h_ * diL_dt_e(i - 1);
+            iLe_(i) = iLe_(i - 1) + h_ .* diL_dt_e(i - 1);
+            
+            % Power simulation
+            if (mod(i, 2) == 1)
+                y_0 = EMF_(i - 2) .* iLe_(i - 2);
+                y_mid = EMF_(i - 1) .* iLe_(i - 1);
+                y_1 = EMF_(i) .* iLe_(i);
+                p = simpson_integral(y_0, y_mid, y_1, dt);
+                if (i == 3)
+                    p_((i-1) ./ 2) = p;
+                else
+                    p_((i-1) ./ 2) = p_((i-1) ./ 2 - 1) + p;
+                end
+            end
         end
 
         %fprintf("%d -> duC/dt %f, duC %f, diL/dt %f, diL %f iL_e %f uC_e %f\n", i, duC(i)/dt, duC(i), diL_(i)/dt, diL_(i), iLe_(i), uCe_(i));
         %fprintf("%d -> EMF %f, uC %f, iL %f\n", i, EMF_(i), uC_(i), iL_(i));
     end
     
+    power = p_(n_ ./ 2);
     % plot
     plot_as_one(t, EMF_, 'EMF', uC_, 'uC', uCe_, 'uC euler', iL_, 'iL', iLe_, 'iL euler');
+    plot_one(p_time_, p_, 'Power', 'Time [s]', 'Watt [W]');
 end
 
 
@@ -183,9 +209,9 @@ function [duC_dt_e] = duC_dt_e(i)
     if (i == 1)
         duC_dt_e = 0;
     else
-        h05 = h_ / 2;
+        h05 = h_ ./ 2;
         didt = diL_dt(i);
-        duC_dt_e = ((iL_(i - 1) + h05 .* didt) / C_);   % estimate uC_dt in half of dt_
+        duC_dt_e = ((iL_(i - 1) + h05 .* didt) ./ C_);   % estimate uC_dt in half of dt_
     end
 end
 
@@ -200,10 +226,19 @@ function [diL_dt_e] = diL_dt_e(i)
     if (i == 1)
         diL_dt_e = 0;
     else
-        h05 = h_ / 2;
-        didt = (EMF_(i - 1) - R_ * iLe_(i - 1) - uC_(i - 1)) / L_;
-        diL_dt_e = (EMF_(i - 1) - R_ * (iLe_(i - 1) + h05*didt) - uC_(i - 1)) / L_;
+        h05 = h_ ./ 2;
+        didt = (EMF_(i - 1) - R_ .* iLe_(i - 1) - uC_(i - 1)) ./ L_;
+        diL_dt_e = (EMF_(i - 1) - R_ .* (iLe_(i - 1) + h05 .* didt) - uC_(i - 1)) ./ L_;
     end
+end
+
+
+% Integration
+
+% Compute integral of y in the range h = x(y_1) - x(y_0) using Simpson's
+% method 
+function [ret] = simpson_integral(y_0, y_mid, y_1, h)
+    ret = (h ./ 3) * (y_0 + 4 .* y_mid + y_1); 
 end
 
 
@@ -215,7 +250,7 @@ function [] = plot_as_one(t, y1, s1, y2, s2, y3, s3, y4, s4, y5, s5)
     yyaxis left
     plot(t, y1, 'r', t, y2, 'g', t, y3, 'blue');
     ylabel('Potential difference [V]');
-    
+
     yyaxis right
     plot(t, y4, 'black', t, y5, 'blue');
     ylabel('Current [A]');
@@ -232,11 +267,10 @@ function [] = plot_as_sub(t, y1, s1, y2, s2, y3, s3)
     legend(s3);
 end
 
-function [] = plot_all(t, y1, s1, y2, s2)
+function [] = plot_one(t, y1, s1, x_desc, y_desc)
     figure();
     p1 = plot(t, y1, 'r');
     legend(p1, s1);
-    figure();
-    p2 = plot(t, y2, 'b');
-    legend(p2, s2);
+    xlabel(x_desc);
+    ylabel(y_desc);
 end

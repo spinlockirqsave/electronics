@@ -6,11 +6,16 @@
 % C_max - capacitance right boundary
 % f_d - forced frequency of the EMF (driving frequency in Hz)
 %
+% Return
+% Capacitance needed to make circuit oscillating at resonance (f == f_d).
+%
 % Details:
-% Function is using
+% Function is using Newton-Raphson method for root searching.
+%
 % Piotr Gregor <piotr@dataanadsignal.com>
 
 function [ret] = rlc_resonant(f_d, C_min, C_max)
+clearvars -global
 global L_
 
 global N_  % max number of iterations performed in Newton-Raphson method

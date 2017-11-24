@@ -13,6 +13,7 @@
 
 
 function [] = rlc_simulate(t0, dt, n, R, L, C, EMFm, f)
+    clearvars -global
     global t0_
     global dt_
     global n_
@@ -100,15 +101,15 @@ function [] = rlc_simulate(t0, dt, n, R, L, C, EMFm, f)
     for i = 1 : n + 1
         if (i > 1)
             % uC
-            duC(i) = duC_dt(i) * dt;
+            duC(i) = duC_dt(i) .* dt;
             uC_(i) = uC_(i - 1) + duC(i - 1);
         
             % iL
-            diL(i) = diL_dt(i) * dt;
+            diL(i) = diL_dt(i) .* dt;
             iL_(i) = iL_(i - 1) + diL(i - 1);
         end
 
-        fprintf("%d -> duC/dt %f, duC %f, diL/dt %f, diL %f\n", i, duC(i)/dt, duC(i), diL(i)/dt, diL(i));
+        fprintf("%d -> duC/dt %f, duC %f, diL/dt %f, diL %f\n", i, duC(i)./dt, duC(i), diL(i)./dt, diL(i));
         fprintf("%d -> EMF %f, uC %f, iL %f\n", i, EMF_(i), uC_(i), iL_(i));
     end
     
@@ -123,7 +124,7 @@ function [duC_dt] = duC_dt(i)
     if (i == 1)
         duC_dt = 0;
     else
-        duC_dt = (iL_(i - 1) / C_);
+        duC_dt = (iL_(i - 1) ./ C_);
     end
 end
 
@@ -137,7 +138,7 @@ function [diL_dt] = diL_dt(i)
     if (i == 1)
         diL_dt = 0;
     else
-        diL_dt = (EMF_(i - 1) - R_ * iL_(i - 1) - uC_(i - 1)) / L_;
+        diL_dt = (EMF_(i - 1) - R_ .* iL_(i - 1) - uC_(i - 1)) ./ L_;
     end
 end
 
