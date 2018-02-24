@@ -53,18 +53,23 @@ function [] = rlc_simulate(t0, dt, n, R, L, C, EMFm, f)
     
     % Driving angular frequency
     f_d_ = f;
-    omega_d_ = 2 * pi * f;
-    XL_ = omega_d_ * L;
-    XC_ = 1 / (omega_d_ * C);
+    omega_d_ = 2 .* pi .* f;
+    XL_ = omega_d_ .* L;
+    XC_ = 1 / (omega_d_ .* C);
     
     % Circuit's natural frequency
-    omega_ = 1 / sqrt(L * C);
-    f_ = omega_ / (2 * pi);
-    XL_res_ = omega_ * L;
-    XC_res_ = 1 / (omega_ * C);
+    omega_ = 1 / sqrt(L .* C);
+    f_ = omega_ / (2 .* pi);
+    XL_res_ = omega_ .* L;
+    XC_res_ = 1 / (omega_ .* C);
     
     % Initial inputs of EMF, voltage across capacitor and current through inductor
-    EMF_ = EMFm * sin(omega_d_ * t);
+    if (f_d_ == 0.0)
+        EMF_ = EMFm * ones(1, n + 1);
+    else
+        EMF_ = EMFm * sin(omega_d_ .* t);
+    end
+
     uC_(1) = 0;     % initial voltage across capacitor must be zero
     iL_(1) = 0;     % initial current through the circuit is zero
     
@@ -146,10 +151,14 @@ end
 
 function [] = plot_as_one(t, y1, s1, y2, s2, y3, s3)
     figure();
+    xlabel('Time [s]');
     yyaxis left
     plot(t, y1, 'r', t, y2, 'g');
+    ylabel('Potential difference [V]');
+    
     yyaxis right
     plot(t, y3, 'b');
+    ylabel('Current [A]');
     legend(s1, s2, s3);
 end
 

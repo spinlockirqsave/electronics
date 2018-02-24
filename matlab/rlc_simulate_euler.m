@@ -16,7 +16,7 @@
 % Piotr Gregor <piotr@dataanadsignal.com>
 
 
-function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
+function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f, square)
     clearvars -global
     global t0_
     global dt_
@@ -80,7 +80,11 @@ function [] = rlc_simulate_euler(t0, dt, n, R, L, C, EMFm, f)
     % Initial inputs of EMF, voltage across capacitor and current through inductor
     EMFm_ = EMFm;
     if (f_d_ == 0.0)
-        EMF_ = EMFm_ * ones(1,n + 1);
+        EMF_ = EMFm_ * ones(1, n + 1);
+        if (square)
+            EMF_(n / 4 : n / 2) = 0;
+            EMF_(3 * n / 4 : end) = 0;
+        end
     else
         EMF_ = EMFm_ * sin(omega_d_ * t);
     end

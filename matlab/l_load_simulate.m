@@ -19,6 +19,7 @@
 
 
 function [] = l_load_simulate(t, L, EMFm, omega_d)
+    clearvars -global
     global L_
     global EMFm_ 
     global omega_d_

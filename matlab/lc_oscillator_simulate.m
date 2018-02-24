@@ -20,6 +20,7 @@
 %
 % Piotr Gregor <piotr@dataanadsignal.com>
 function [] = lc_oscillator_simulate(t, L, C, V_0, phase)
+    clearvars -global
     global L_
     global C_
     global V_0_ 
