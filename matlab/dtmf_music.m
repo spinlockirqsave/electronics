@@ -1,8 +1,8 @@
-function [Sxxy wy] = dtmf_music(x, p, rate)
+function [Sxxy wy] = dtmf_music(x, p, Fs)
 %MUSIC  Implements the MUSIC algorithm of line spectra estimation.
 %   x - vector of input signal
-%   p - extimated number of independent signal sources in @x
-%   rate - sampling rate
+%   p - estimated number of independent signal sources in @x
+%   Fs - sampling rate
 %   
 % author: Piotr Gregor, piotr@dataandsignal.com
 % date: February 2018
@@ -25,7 +25,7 @@ signal_eigenvects = eigenvects(:,1:p_eff);
 noise_eigenvects = eigenvects(:,p_eff+1:end);
 
 % 4. Compute the pseudospectrum
-[Sxx,w] = dtmf_music_pseudospectrum(noise_eigenvects, eigenvals, rate, [], 'half', 0);
+[Sxx,w] = dtmf_music_pseudospectrum(noise_eigenvects, eigenvals, Fs, [], 'half', 0);
 
 % 5. Plot pseudospectrum
 narginchk(2,10);
@@ -38,9 +38,10 @@ ylabel('Power (dB)');
 figure();
 
 % 6. Peak detection
-dt = 1 ./ rate;
+dt = 1 ./ Fs;
 t = (0 : dt : (2.*p(1) - 1).*dt);
-f = 689;
+%f = 689;
+f = 1200;
 fN = 10;
 peaks = zeros(1, fN);
 freqs = (f : 1 : f + fN - 1);
